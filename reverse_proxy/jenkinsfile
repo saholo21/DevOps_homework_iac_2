@@ -20,7 +20,7 @@ pipeline {
                 sshagent(['ssh-app-server']) {
                     unstash 'assets'
                     sh 'ls'
-                    sh 'cd assets; ls'
+                    sh 'cd reverse_proxy; ls'
                     script {
 
                         try {
