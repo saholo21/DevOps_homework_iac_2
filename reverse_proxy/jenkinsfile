@@ -30,7 +30,7 @@ pipeline {
                         }
                     }
                     sh "scp -o StrictHostKeyChecking=no -r reverse_proxy ec2-user@${params.ip}:/home/ec2-user"
-                    sh "ssh -tt -o StrictHostKeyChecking=no ec2-user@${params.ip} 'cd reverse_proxy && docker build -t reverse_proxy . && docker run --name reverse_proxy -p 80:80 -d reverse_proxy'"
+                    sh "ssh -tt -o StrictHostKeyChecking=no ec2-user@${params.ip} 'cd reverse_proxy && docker build -t reverse_proxy . && docker run --name reverse_proxy -p 8082:8082 -d reverse_proxy'"
                 }   
 
                 
