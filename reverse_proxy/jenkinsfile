@@ -17,23 +17,23 @@ pipeline {
 
         stage('ssh-reverse-proxy-agent'){
             steps {
-                dir('reverse_proxy') {
+                sshagent(['ssh-app-server']) {
+                    unstash 'assets'
+                    sh 'ls'
+                    sh 'cd assets; ls'
+                    script {
 
-                    sshagent(['ssh-app-server']) {
-                        sh 'ls'
-                        script {
-
-                            try {
-                                sh "ssh -tt -o StrictHostKeyChecking=no ec2-user@${params.ip} 'docker stop reverse_proxy && docker rm reverse_proxy'"
-                            } catch (err){
-                                echo "Error detected, but will continue"
-                            }
+                        try {
+                            sh "ssh -tt -o StrictHostKeyChecking=no ec2-user@${params.ip} 'docker stop reverse_proxy && docker rm reverse_proxy'"
+                        } catch (err){
+                            echo "Error detected, but will continue"
                         }
-                        sh "scp -o StrictHostKeyChecking=no -r reverse_proxy ec2-user@${params.ip}:/home/ec2-user"
-                        sh "ssh -tt -o StrictHostKeyChecking=no ec2-user@${params.ip} 'cd reverse_proxy && docker build -t reverse_proxy . && docker run --name reverse_proxy -p 8082:8082 -d reverse_proxy'"
-                    }   
+                    }
+                    sh "scp -o StrictHostKeyChecking=no -r reverse_proxy ec2-user@${params.ip}:/home/ec2-user"
+                    sh "ssh -tt -o StrictHostKeyChecking=no ec2-user@${params.ip} 'cd reverse_proxy && docker build -t reverse_proxy . && docker run --name reverse_proxy -p 8082:8082 -d reverse_proxy'"
+                }   
 
-                }
+                
             }
 
         }
