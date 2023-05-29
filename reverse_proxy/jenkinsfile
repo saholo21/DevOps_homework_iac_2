@@ -1,0 +1,42 @@
+pipeline {
+    parameters {
+        string(name: 'ip', defaultValue: '44.202.73.110', description: 'server ip to depoy (This is to parametrize the server ip when it changes on every redeploy)')
+
+    }
+    agent any
+    
+    stages {
+
+        stage('Checkout') 
+        {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/saholo21/DevOps_homework_iac.git']]])
+                stash includes: 'reverse_proxy/**', name: 'assets'
+            }
+        }
+
+        stage('ssh-reverse-proxy-agent'){
+            steps {
+                dir('reverse_proxy') {
+
+                    sshagent(['ssh-app-server']) {
+                        sh 'ls'
+                        script {
+
+                            try {
+                                sh "ssh -tt -o StrictHostKeyChecking=no ec2-user@${params.ip} 'docker stop reverse_proxy && docker rm reverse_proxy'"
+                            } catch (err){
+                                echo "Error detected, but will continue"
+                            }
+                        }
+                        sh "scp -o StrictHostKeyChecking=no -r reverse_proxy ec2-user@${params.ip}:/home/ec2-user"
+                        sh "ssh -tt -o StrictHostKeyChecking=no ec2-user@${params.ip} 'cd reverse_proxy && docker build -t reverse_proxy . && docker run --name reverse_proxy -p 8082:8082 -d reverse_proxy'"
+                    }   
+
+                }
+            }
+
+        }
+
+    }
+}
